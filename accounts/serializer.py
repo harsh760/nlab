@@ -2,6 +2,10 @@ from .models import User , Advisor , Calls
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 import datetime
+from django.contrib.auth.models import update_last_login
+from rest_framework_jwt.settings import api_settings
+JWT_PAYLOAD_HANDLER = api_settings.JWT_PAYLOAD_HANDLER
+JWT_ENCODE_HANDLER = api_settings.JWT_ENCODE_HANDLER
 
 class RegistrationSerializer(serializers.ModelSerializer):
    
@@ -24,7 +28,10 @@ class RegistrationSerializer(serializers.ModelSerializer):
             password=self.validated_data['password']
             user.set_password(password)
             user.save()
-            return user
+            payload = JWT_PAYLOAD_HANDLER(user)
+            jwt_token = JWT_ENCODE_HANDLER(payload)
+            update_last_login(None, user)
+            return user , jwt_token
         else:
             data['status_code']=400
             data['details']='User already exist'
@@ -40,24 +47,23 @@ class UserSigninSerializer(serializers.ModelSerializer):
     def save(self):
         username = self.validated_data['email']
         password = self.validated_data['password']
-        old = User.objects.filter(email__iexact = username)
-
-        data={}
-        if old.exists():
-            user = authenticate(
-                    username = username,
-                    password = password 
-                )
-            if user is None:
-                data['status_code']=400
-                data['details'] = "invalid credentials"
-                raise serializers.ValidationError(data)
-            return user
-        else:
-            data['status_code']=400
-            data['details']='User with given credentials does not exist.'
-            raise serializers.ValidationError(data) 
-        return user
+        
+        user = authenticate(
+                username = username,
+                password = password 
+            )
+        if user is None:
+            raise serializers.ValidationError()
+        try:
+            payload = JWT_PAYLOAD_HANDLER(user)
+            jwt_token = JWT_ENCODE_HANDLER(payload)
+            update_last_login(None, user)
+        except User.DoesNotExist:
+            raise serializers.ValidationError()
+        return {
+            'user_id':user.id,
+            'jwt_token': jwt_token
+        }
 
 class AdvisorSerializer(serializers.ModelSerializer):
     class Meta:

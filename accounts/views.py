@@ -3,8 +3,9 @@ from django.views.decorators.csrf import  csrf_exempt
 
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view , permission_classes
+from rest_framework.decorators import api_view , permission_classes 
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 from .serializer import RegistrationSerializer , UserSigninSerializer , AdvisorSerializer ,AddAdvisorSerializer , BookAdvisorSerializer , CallsSerializer
 from .models import User , Advisor , Calls
@@ -16,15 +17,12 @@ def register(request, *args, **kwargs):
     serializer = RegistrationSerializer(data=request.data, many=False)
     data = {}
     if serializer.is_valid():
-        user = serializer.save()
-        user.save()
-        data['status_code'] = 200
-        data['details'] = "Successfully registered a new user"
-        return Response(data=data, status=status.HTTP_201_CREATED)
+        user , token = serializer.save()
+        data['user_id'] = user.id
+        data['jwt_token'] = token
+        return Response(data=data, status=status.HTTP_200_OK)
     else:
-        data['status_code'] = 400
-        data['details'] = serializer.errors
-        return Response(data=data)
+        return Response(status = status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST",])
 @permission_classes([AllowAny])
@@ -34,34 +32,18 @@ def usersignin(request):
    
     if signin_serializer.is_valid():
         user = signin_serializer.save()
-        # token, _ = Token.objects.get_or_create(user=user)
-        # is_expired, token = token_expire_handler(token)
         
-        data['status_code'] = 200
-        # data['details'] = 'Token is issued'
-        print(user)
-        #details
-        data['user_id'] = user.id
-        # data['token'] = token.key
-        # data['expires_in'] = expires_in(token)
-        # data['first_name']=user.first_name
-        # data['last_name']=user.last_name
-        # data['city']=user.city
-        # data['area']=user.area
-
-        # consumer=Consumer.objects.get(user_id=user.id)
-        # data['ref_code']=consumer.ref_code
-
-        return Response(data=data, status=status.HTTP_201_CREATED)
+        data['user_id'] = user['user_id']
+        data['jwt_token'] = user['jwt_token']
+        return Response(data=data, status=status.HTTP_200_OK)
     else:
-        data['status_code'] = 404
-        data['details'] =signin_serializer.errors
-        return Response(data=data, status=status.HTTP_404_NOT_FOUND)
+        return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
     # return Response("hello world")
 
 @api_view(["GET",])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def getAdvisor(request , **kwargs):
+    # authentcation_class = JSONWebTokenAuthentication
     ad = Advisor.objects.all()
     serializer = AdvisorSerializer(ad , many=True)
     return Response(data = serializer.data , status=status.HTTP_200_OK)
@@ -78,7 +60,7 @@ def addAdvisor(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST',])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def bookAdvisor(request,user_id,advisor_id):
     serializer = BookAdvisorSerializer(data=request.data, many=False , context={'uid': user_id , 'aid':advisor_id})
     if serializer.is_valid():
@@ -91,10 +73,9 @@ def bookAdvisor(request,user_id,advisor_id):
 
 
 @api_view(["GET",])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def getCalls(request , user_id):
     ad = Calls.objects.filter(user = user_id)
-    print(ad)
     data = {}
     serializer = CallsSerializer(ad , many=True)
     return Response(data=serializer.data , status=status.HTTP_200_OK)
