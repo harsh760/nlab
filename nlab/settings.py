@@ -27,9 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-4j^ixkkd+&-r!!q%-yf(-=2_)&(jb7o5h(b84%af5^a)&y+g0j'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['nlab-internship.herokuapp.com']
 
 
 # Application definition
@@ -141,6 +141,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 STATIC_URL = '/static/'
 
@@ -179,5 +180,6 @@ JWT_AUTH = {
   'JWT_AUTH_HEADER_PREFIX': 'Bearer',
   'JWT_AUTH_COOKIE': None,
 }
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 django_heroku.settings(locals())
