@@ -9,7 +9,7 @@ Some API endpoints need the authentication token which can be applied by registe
 
 ### How to run project on local host -
 - Clone the repository
-`git clone https://github.com/harsh760/nlab`
+`git clone https://github.com/harsh760/nlab.git`
 
 - Install all the required library and dependencies
 `pip3 install -r requirements.txt`
