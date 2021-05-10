@@ -11,7 +11,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
    
     class Meta:
         model = User
-        # fields = ('phone','first_name' ,'last_name' , 'city' ,'area','password' , 'address','fcm_token','ref_code')
         fields = "__all__"
         extra_kwargs={
             'password':{'write_only':True}
