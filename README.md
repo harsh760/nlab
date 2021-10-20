@@ -1,7 +1,7 @@
 
 
 # Synopsis
-This is a challenge question by NurtureLabs for their backend internship. This consists of few api endpoints that are to be created using django. List of api endpoints are given at the end of the file. 
+This consists of few ReST api endpoints that are to be created using django. List of api endpoints are given at the end of the file. 
 Some API endpoints need the authentication token which can be applied by registering user or using existing login details.
 
 ### Deployed on heroku -
